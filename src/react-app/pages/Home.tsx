@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/react-app/components/Navbar";
 import ProductCard from "@/react-app/components/ProductCard";
 import ChatBot from "@/react-app/components/ChatBot";
-import { Search, Sparkles, TrendingUp, Package } from "lucide-react";
+import { Search, TrendingUp, Package } from "lucide-react";
 import { getProducts } from "@/react-app/lib/firestore";
 import type { Product } from "@/react-app/lib/firestore";
 import { motion } from "framer-motion";
@@ -26,7 +26,6 @@ const categories = [
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [loading, setLoading] = useState(true);
@@ -46,10 +45,6 @@ export default function Home() {
       setProducts(data);
 
       // Featured products
-      if (!searchQuery && !selectedCategory) {
-        const featuredData = await getProducts(undefined, undefined, true);
-        setFeaturedProducts(featuredData.slice(0, 6));
-      }
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {

@@ -27,7 +27,7 @@ import {
   type Offer,
 } from "@/react-app/lib/firestore";
 import { useAuth } from "@/react-app/context/AuthContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function AdminDashboard() {
   const { user } = useAuth();

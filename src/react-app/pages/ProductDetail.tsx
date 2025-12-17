@@ -166,7 +166,7 @@ export default function ProductDetail() {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-5 h-5 ${i < Math.floor(product.rating)
+                        className={`w-5 h-5 ${i < Math.floor(product.rating || 0)
                           ? "fill-yellow-400 text-yellow-400"
                           : "text-gray-300"
                           }`}
