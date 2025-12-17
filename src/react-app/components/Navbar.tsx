@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "@/react-app/context/AuthContext";
 import { getNotifications } from "@/react-app/lib/firestore";
-import { ShoppingCart, Heart, Bell, User, LogOut } from "lucide-react";
+import { ShoppingCart, Heart, Bell, User, LogOut, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -80,6 +80,26 @@ export default function Navbar() {
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 transition-all group-hover:w-full"></span>
                 </Link>
               )}
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="flex-1 max-w-lg mx-8 hidden md:block">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search for products..."
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 transition-all"
+                onChange={(e) => {
+                  const query = e.target.value;
+                  if (query) {
+                    navigate(`/?search=${encodeURIComponent(query)}`);
+                  } else {
+                    navigate('/');
+                  }
+                }}
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             </div>
           </div>
 
@@ -195,6 +215,6 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-    </nav>
+    </nav >
   );
 }

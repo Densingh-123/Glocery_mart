@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router";
 import Navbar from "@/react-app/components/Navbar";
 import ProductCard from "@/react-app/components/ProductCard";
 import ChatBot from "@/react-app/components/ChatBot";
-import { Search, TrendingUp, Package } from "lucide-react";
+import { TrendingUp, Package } from "lucide-react";
 import { getProducts } from "@/react-app/lib/firestore";
 import type { Product } from "@/react-app/lib/firestore";
 import { motion } from "framer-motion";
@@ -26,7 +27,8 @@ const categories = [
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get("search") || "";
   const [selectedCategory, setSelectedCategory] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -125,25 +127,6 @@ export default function Home() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-8"
-        >
-          <div className="relative max-w-2xl mx-auto">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search for groceries, vegetables, fruits..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none shadow-sm hover:shadow-md transition-all"
-            />
-          </div>
-        </motion.div>
-
         {/* Categories */}
         <div className="mb-12" id="categories-section">
           <motion.h2
