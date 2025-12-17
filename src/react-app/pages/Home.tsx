@@ -57,29 +57,72 @@ export default function Home() {
       <Navbar />
 
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-green-600 to-green-700 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200')] opacity-20 bg-cover bg-center"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="max-w-2xl">
-            <h1 className="text-5xl font-bold mb-4 leading-tight">
-              Fresh Groceries
-              <br />
-              <span className="text-green-200">Delivered to Your Door</span>
-            </h1>
-            <p className="text-xl text-green-100 mb-8">
-              Shop from 10,000+ products with free delivery on orders over ₹50
-            </p>
-            <div className="flex gap-4">
-              <button className="px-8 py-3 bg-white text-green-700 rounded-lg font-semibold hover:bg-green-50 transition-all shadow-lg hover:shadow-xl">
-                Shop Now
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-r from-green-600 to-green-700 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600')] bg-cover bg-center opacity-20"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+          <div className="max-w-3xl">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-5xl md:text-6xl font-bold mb-6"
+            >
+              Fresh Groceries Delivered to Your Doorstep
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-xl md:text-2xl mb-8 text-green-50"
+            >
+              Shop from 10,000+ products and get them delivered in 24 hours
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex flex-wrap gap-4"
+            >
+              <button
+                onClick={() => {
+                  const element = document.getElementById('categories-section');
+                  element?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="bg-white text-green-600 px-8 py-4 rounded-lg font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all"
+              >
+                Start Shopping
               </button>
-              <button className="px-8 py-3 bg-green-500 bg-opacity-30 backdrop-blur-sm text-white rounded-lg font-semibold hover:bg-opacity-40 transition-all border border-white/30">
-                Learn More
+              <button
+                onClick={() => setSelectedCategory("organic")}
+                className="bg-green-600 border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-xl hover:bg-green-700 transition-all"
+              >
+                Organic Collection
               </button>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </div>
+
+        {/* Floating Elements */}
+        <motion.div
+          animate={{ y: [0, -20, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-20 right-20 hidden lg:block"
+        >
+          <div className="w-32 h-32 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-6xl">
+            🍎
+          </div>
+        </motion.div>
+        <motion.div
+          animate={{ y: [0, -20, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          className="absolute bottom-20 right-40 hidden lg:block"
+        >
+          <div className="w-24 h-24 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-5xl">
+            🥬
+          </div>
+        </motion.div>
+      </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search Bar */}
@@ -102,7 +145,7 @@ export default function Home() {
         </motion.div>
 
         {/* Categories */}
-        <div className="mb-12">
+        <div className="mb-12" id="categories-section">
           <motion.h2
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -154,17 +197,17 @@ export default function Home() {
           </motion.h2>
 
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {[...Array(10)].map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-xl shadow-sm h-80 animate-pulse"
+                  className="bg-white rounded-xl shadow-sm h-64 animate-pulse"
                 >
-                  <div className="bg-gray-200 h-48 rounded-t-xl"></div>
-                  <div className="p-4 space-y-3">
-                    <div className="bg-gray-200 h-4 rounded w-3/4"></div>
-                    <div className="bg-gray-200 h-4 rounded w-1/2"></div>
-                    <div className="bg-gray-200 h-8 rounded"></div>
+                  <div className="bg-gray-200 h-40 rounded-t-xl"></div>
+                  <div className="p-3 space-y-2">
+                    <div className="bg-gray-200 h-3 rounded w-3/4"></div>
+                    <div className="bg-gray-200 h-3 rounded w-1/2"></div>
+                    <div className="bg-gray-200 h-6 rounded"></div>
                   </div>
                 </div>
               ))}
@@ -174,7 +217,7 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ staggerChildren: 0.1 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
             >
               {products.map((product) => (
                 <ProductCard

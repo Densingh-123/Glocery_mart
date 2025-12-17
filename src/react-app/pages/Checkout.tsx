@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { useAuth } from "@/react-app/context/AuthContext";
 import Navbar from "@/react-app/components/Navbar";
 import { MapPin, CreditCard, CheckCircle } from "lucide-react";
+import toast from "react-hot-toast";
 import type { CartItem } from "@/react-app/lib/firestore";
 import { getCart, createOrder, clearCart } from "@/react-app/lib/firestore";
 
@@ -71,9 +72,11 @@ export default function Checkout() {
 
       const orderId = await createOrder(user.uid, orderData, cartItems);
       await clearCart(user.uid);
+      toast.success("Order placed successfully!");
       navigate(`/orders/${orderId}`);
     } catch (error) {
       console.error("Error placing order:", error);
+      toast.error("Failed to place order");
     } finally {
       setSubmitting(false);
     }

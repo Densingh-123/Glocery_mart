@@ -2,6 +2,7 @@ import { useNavigate } from "react-router";
 import { Link } from "react-router";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import type { Product } from "@/react-app/lib/firestore";
 import { addToCart, addToWishlist, removeFromWishlist, checkWishlistStatus } from "@/react-app/lib/firestore";
 import { useAuth } from "@/react-app/context/AuthContext";
@@ -39,9 +40,11 @@ export default function ProductCard({
 
     try {
       await addToCart(user.uid, product, 1);
+      toast.success("Added to cart!");
       onAddToCart?.();
     } catch (error) {
       console.error("Error adding to cart:", error);
+      toast.error("Failed to add to cart");
     } finally {
       setIsAdding(false);
     }
@@ -76,12 +79,15 @@ export default function ProductCard({
     try {
       if (newStatus) {
         await addToWishlist(user.uid, product);
+        toast.success("Added to wishlist!");
       } else {
         await removeFromWishlist(user.uid, product.id);
+        toast.success("Removed from wishlist");
       }
       onAddToWishlist?.();
     } catch (error) {
       console.error("Error updating wishlist:", error);
+      toast.error("Failed to update wishlist");
       setIsWishlisted(!newStatus); // Revert on error
     }
   };
@@ -129,31 +135,31 @@ export default function ProductCard({
           </motion.button>
         </div>
 
-        <div className="p-4 flex-1 flex flex-col">
-          <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-green-600 transition-colors">
+        <div className="p-3 flex-1 flex flex-col">
+          <h3 className="font-medium text-gray-900 mb-1 text-sm line-clamp-2 group-hover:text-green-600 transition-colors h-10">
             {product.name}
           </h3>
 
           {product.rating && product.rating > 0 && (
-            <div className="flex items-center gap-1 mb-2">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-semibold text-gray-700">
+            <div className="flex items-center gap-1 mb-1.5">
+              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+              <span className="text-xs font-semibold text-gray-700">
                 {product.rating?.toFixed(1)}
               </span>
-              <span className="text-xs text-gray-500">
+              <span className="text-[10px] text-gray-500">
                 ({product.review_count})
               </span>
             </div>
           )}
 
-          <div className="mt-auto pt-3">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xl font-bold text-green-600">
-                ₹{price.toFixed(2)}
+          <div className="mt-auto pt-2">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg font-bold text-green-600">
+                ₹{price.toFixed(0)}
               </span>
               {hasDiscount && (
-                <span className="text-sm text-gray-500 line-through">
-                  ₹{product.price.toFixed(2)}
+                <span className="text-xs text-gray-500 line-through">
+                  ₹{product.price.toFixed(0)}
                 </span>
               )}
             </div>
@@ -163,13 +169,13 @@ export default function ProductCard({
                 whileTap={{ scale: 0.95 }}
                 onClick={handleAddToCart}
                 disabled={isAdding}
-                className="w-full py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                className="w-full py-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-green-700 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
               >
-                <ShoppingCart className="w-4 h-4" />
-                {isAdding ? "Adding..." : "Add to Cart"}
+                <ShoppingCart className="w-3.5 h-3.5" />
+                {isAdding ? "Adding..." : "Add"}
               </motion.button>
             ) : (
-              <div className="w-full py-2 bg-gray-200 text-gray-500 rounded-lg font-semibold text-center">
+              <div className="w-full py-1.5 bg-gray-200 text-gray-500 rounded-lg text-xs font-semibold text-center">
                 Out of Stock
               </div>
             )}

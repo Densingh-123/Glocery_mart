@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { useAuth } from "@/react-app/context/AuthContext";
 import Navbar from "@/react-app/components/Navbar";
 import { Trash2, Plus, Minus, ArrowRight } from "lucide-react";
+import toast from "react-hot-toast";
 import type { CartItem } from "@/react-app/lib/firestore";
 import { getCart, updateCartItem, removeFromCart, clearCart as clearCartFirestore } from "@/react-app/lib/firestore";
 
@@ -38,8 +39,10 @@ export default function Cart() {
     try {
       await updateCartItem(user.uid, itemId, quantity);
       fetchCart();
+      toast.success("Cart updated");
     } catch (error) {
       console.error("Error updating quantity:", error);
+      toast.error("Failed to update cart");
     }
   };
 
@@ -48,8 +51,10 @@ export default function Cart() {
     try {
       await removeFromCart(user.uid, itemId);
       fetchCart();
+      toast.success("Item removed from cart");
     } catch (error) {
       console.error("Error removing item:", error);
+      toast.error("Failed to remove item");
     }
   };
 
@@ -60,8 +65,10 @@ export default function Cart() {
     try {
       await clearCartFirestore(user.uid);
       fetchCart();
+      toast.success("Cart cleared");
     } catch (error) {
       console.error("Error clearing cart:", error);
+      toast.error("Failed to clear cart");
     }
   };
 

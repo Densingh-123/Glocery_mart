@@ -161,15 +161,15 @@ export default function OrderDetail() {
                   >
                     <img
                       src={
-                        item.product_image ||
+                        item.image_url ||
                         "https://images.unsplash.com/photo-1542838132-92c53300491e?w=200"
                       }
-                      alt={item.product_name}
+                      alt={item.name}
                       className="w-20 h-20 object-cover rounded-lg"
                     />
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">
-                        {item.product_name}
+                        {item.name}
                       </h3>
                       <div className="text-sm text-gray-600">
                         Quantity: {item.quantity}

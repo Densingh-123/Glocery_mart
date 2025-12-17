@@ -149,6 +149,26 @@ export default function Orders() {
                     </div>
                   </div>
 
+                  {/* Order Items Preview */}
+                  {order.items && order.items.length > 0 && (
+                    <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2">
+                      {order.items.slice(0, 4).map((item: any, index: number) => (
+                        <div key={index} className="relative flex-shrink-0">
+                          <img
+                            src={item.image_url || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=200"}
+                            alt={item.name}
+                            className="w-16 h-16 object-cover rounded-md border border-gray-200"
+                          />
+                          {index === 3 && order.items && order.items.length > 4 && (
+                            <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center text-white text-xs font-bold">
+                              +{order.items.length - 3}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-4">
                     <ChevronRight className="w-6 h-6 text-gray-400" />
                   </div>

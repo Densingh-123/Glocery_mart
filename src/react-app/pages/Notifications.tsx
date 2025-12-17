@@ -113,7 +113,7 @@ export default function Notifications() {
               <div
                 key={notification.id}
                 onClick={() => handleNotificationClick(notification)}
-                className={`bg-white rounded-xl shadow-md p-6 cursor-pointer hover:shadow-lg transition-all ${notification.is_read === 0
+                className={`bg-white rounded-xl shadow-md p-6 cursor-pointer hover:shadow-lg transition-all ${!notification.is_read
                   ? "border-l-4 border-green-500"
                   : "opacity-75"
                   }`}
@@ -130,7 +130,7 @@ export default function Notifications() {
                       <h3 className="font-semibold text-gray-900">
                         {notification.title}
                       </h3>
-                      {notification.is_read === 0 && (
+                      {!notification.is_read && (
                         <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
                       )}
                     </div>
@@ -139,19 +139,24 @@ export default function Notifications() {
 
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">
-                        {new Date(notification.created_at).toLocaleDateString(
-                          "en-IN",
-                          {
+                        {notification.created_at?.seconds
+                          ? new Date(notification.created_at.seconds * 1000).toLocaleDateString("en-IN", {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
                             hour: "2-digit",
                             minute: "2-digit",
-                          }
-                        )}
+                          })
+                          : new Date().toLocaleDateString("en-IN", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                       </span>
 
-                      {notification.is_read === 0 && (
+                      {!notification.is_read && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

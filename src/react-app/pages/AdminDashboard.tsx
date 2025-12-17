@@ -28,6 +28,7 @@ import {
 } from "@/react-app/lib/firestore";
 import { useAuth } from "@/react-app/context/AuthContext";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -138,8 +139,10 @@ export default function AdminDashboard() {
         is_organic: false,
       });
       fetchData();
+      toast.success("Product created successfully");
     } catch (error) {
       console.error("Error creating product:", error);
+      toast.error("Failed to create product");
     }
   };
 
@@ -160,8 +163,10 @@ export default function AdminDashboard() {
       setShowProductModal(false);
       setEditingProduct(null);
       fetchData();
+      toast.success("Product updated successfully");
     } catch (error) {
       console.error("Error updating product:", error);
+      toast.error("Failed to update product");
     }
   };
 
@@ -171,8 +176,10 @@ export default function AdminDashboard() {
     try {
       await deleteProduct(id);
       fetchData();
+      toast.success("Product deleted successfully");
     } catch (error) {
       console.error("Error deleting product:", error);
+      toast.error("Failed to delete product");
     }
   };
 
@@ -180,8 +187,10 @@ export default function AdminDashboard() {
     try {
       await updateOrderStatus(orderId, status);
       fetchData();
+      toast.success("Order status updated");
     } catch (error) {
       console.error("Error updating order status:", error);
+      toast.error("Failed to update order status");
     }
   };
 
@@ -205,8 +214,10 @@ export default function AdminDashboard() {
         valid_until: "",
       });
       fetchData();
+      toast.success("Offer created successfully");
     } catch (error) {
       console.error("Error creating offer:", error);
+      toast.error("Failed to create offer");
     }
   };
 
@@ -215,8 +226,10 @@ export default function AdminDashboard() {
     try {
       await deleteOffer(id);
       fetchData();
+      toast.success("Offer deleted successfully");
     } catch (error) {
       console.error("Error deleting offer:", error);
+      toast.error("Failed to delete offer");
     }
   };
 
@@ -343,29 +356,40 @@ export default function AdminDashboard() {
           >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Products</h2>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  setEditingProduct(null);
-                  setProductForm({
-                    name: "",
-                    description: "",
-                    category: "vegetables",
-                    price: "",
-                    sale_price: "",
-                    stock: "",
-                    image_url: "",
-                    is_featured: false,
-                    is_organic: false,
-                  });
-                  setShowProductModal(true);
-                }}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
-              >
-                <Plus className="w-5 h-5" />
-                Add Product
-              </motion.button>
+              <div className="flex gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleSeedProducts}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  Seed Products
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setEditingProduct(null);
+                    setProductForm({
+                      name: "",
+                      description: "",
+                      category: "vegetables",
+                      price: "",
+                      sale_price: "",
+                      stock: "",
+                      image_url: "",
+                      is_featured: false,
+                      is_organic: false,
+                    });
+                    setShowProductModal(true);
+                  }}
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  Add Product
+                </motion.button>
+              </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-lg overflow-hidden overflow-x-auto">

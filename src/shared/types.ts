@@ -59,6 +59,7 @@ export const OrderSchema = z.object({
   created_at: z.string(),
   updated_at: z.string(),
   delivered_at: z.string().nullable(),
+  items: z.array(z.any()).optional(),
 });
 
 export type Order = z.infer<typeof OrderSchema>;

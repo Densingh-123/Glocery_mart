@@ -199,9 +199,15 @@ export const createOrder = async (userId: string, orderData: any, cartItems: any
 };
 
 export const getOrders = async (userId: string) => {
-    const q = query(collection(db, "orders"), where("user_id", "==", userId), orderBy("created_at", "desc"));
+    const q = query(collection(db, "orders"), where("user_id", "==", userId));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+    return snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as Order))
+        .sort((a, b) => {
+            const dateA = a.created_at?.seconds || 0;
+            const dateB = b.created_at?.seconds || 0;
+            return dateB - dateA;
+        });
 };
 
 export const getOrder = async (orderId: string) => {
@@ -225,8 +231,9 @@ export const updateOrderStatus = async (orderId: string, status: string) => {
         await createNotification(
             orderData.user_id,
             "Order Status Updated",
-            `Your order #${orderData.order_number} is now ${status}.`,
-            "order"
+            `Your order #${orderData.order_number || orderId.slice(0, 6)} is now ${status}.`,
+            "order",
+            orderId
         );
     }
 };
@@ -303,13 +310,14 @@ export const deleteOffer = async (id: string) => {
 };
 
 // Notifications
-export const createNotification = async (userId: string, title: string, message: string, type: "order" | "system" | "promo" = "system") => {
+export const createNotification = async (userId: string, title: string, message: string, type: "order" | "system" | "promo" = "system", orderId?: string) => {
     await addDoc(collection(db, `users/${userId}/notifications`), {
         title,
         message,
         type,
         read: false,
         is_read: false,
+        order_id: orderId || null,
         created_at: serverTimestamp()
     });
 };
