@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "019aa99e-1a1a-77fa-b185-4fd270b34681",
+  "main": "./src/worker/index.ts",
+  "compatibility_date": "2025-06-17",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "observability": {
+    "enabled": true
+  },
+
+  "upload_source_maps": true,
+
+  "vars": {
+    "GOOGLE_CLIENT_ID": "YOUR_GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET": "YOUR_GOOGLE_CLIENT_SECRET",
+    "GOOGLE_REDIRECT_URL": "http://localhost:8787/api/oauth/google/callback",
+    "AUTH_SECRET": "YOUR_RANDOM_SECRET_KEY"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "019aa99e-1a1a-77fa-b185-4fd270b34681",
+      "database_id": "019aa99e-1a1a-77fa-b185-4fd270b34681"
+    }
+  ],
+
+  "r2_buckets": [
+    {
+      "binding": "R2_BUCKET",
+      "bucket_name": "019aa99e-1a1a-77fa-b185-4fd270b34681"
+    }
+  ]
+}

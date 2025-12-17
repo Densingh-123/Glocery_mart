@@ -1,0 +1,20 @@
+
+DROP INDEX idx_notifications_is_read;
+DROP INDEX idx_notifications_user_id;
+DROP TABLE notifications;
+DROP TABLE offers;
+DROP INDEX idx_wishlist_user_id;
+DROP TABLE wishlist;
+DROP INDEX idx_cart_user_id;
+DROP TABLE cart;
+DROP INDEX idx_reviews_product_id;
+DROP TABLE reviews;
+DROP INDEX idx_order_items_order_id;
+DROP TABLE order_items;
+DROP INDEX idx_orders_order_number;
+DROP INDEX idx_orders_status;
+DROP INDEX idx_orders_user_id;
+DROP TABLE orders;
+DROP INDEX idx_products_featured;
+DROP INDEX idx_products_category;
+DROP TABLE products;
