@@ -68,7 +68,8 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-5xl md:text-6xl font-bold mb-6"
+              className="text-5xl md:text-6xl font-bold mb-6 italic"
+              style={{ fontFamily: "'Playfair Display', serif" }}
             >
               Fresh Groceries Delivered to Your Doorstep
             </motion.h1>
@@ -76,7 +77,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-xl md:text-2xl mb-8 text-green-50"
+              className="text-xl md:text-1xl mb-8 text-green-50"
             >
               Shop from 10,000+ products and get them delivered in 24 hours
             </motion.p>

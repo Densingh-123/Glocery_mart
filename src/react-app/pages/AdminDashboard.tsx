@@ -9,6 +9,11 @@ import {
   Trash2,
   X,
   Gift,
+  RefreshCw,
+  Bell,
+  Info,
+  Clock,
+  Check,
 } from "lucide-react";
 import {
   getProducts,
@@ -332,12 +337,21 @@ export default function AdminDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-8 flex justify-between items-end"
         >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Admin Dashboard
-          </h1>
-          <p className="text-gray-600">Manage products, orders, and offers</p>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Admin Dashboard
+            </h1>
+            <p className="text-gray-600">Manage products, orders, and offers</p>
+          </div>
+          <button
+            onClick={fetchData}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh Data
+          </button>
         </motion.div>
 
         {/* Stats */}
@@ -348,13 +362,13 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-xl shadow-lg p-6 flex items-center gap-4"
+              className="bg-white rounded-xl shadow-lg p-6 flex items-center gap-4 border border-gray-100 hover:shadow-xl transition-shadow"
             >
-              <div className={`${stat.color} p-4 rounded-lg`}>
+              <div className={`${stat.color} p-4 rounded-xl shadow-lg shadow-opacity-20`}>
                 <stat.icon className="w-6 h-6 text-white" />
               </div>
               <div>
-                <div className="text-sm text-gray-600">{stat.label}</div>
+                <div className="text-sm font-medium text-gray-500 mb-1">{stat.label}</div>
                 <div className="text-2xl font-bold text-gray-900">
                   {stat.value}
                 </div>
@@ -627,6 +641,77 @@ export default function AdminDashboard() {
                   )}
                 </motion.div>
               ))}
+            </div>
+          </motion.div>
+        )}
+        {/* Notifications Tab */}
+        {activeTab === "notifications" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Notifications</h2>
+              <button
+                onClick={fetchData}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Refresh Notifications"
+              >
+                <RefreshCw className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {adminNotifications.length === 0 ? (
+                <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Bell className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">No notifications</h3>
+                  <p className="text-gray-500">You're all caught up!</p>
+                </div>
+              ) : (
+                adminNotifications.map((notification) => (
+                  <motion.div
+                    key={notification.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`bg-white rounded-xl shadow-sm border p-6 flex items-start justify-between transition-all hover:shadow-md ${!notification.read
+                      ? "border-green-200 bg-green-50/30"
+                      : "border-gray-100"
+                      }`}
+                  >
+                    <div className="flex gap-4">
+                      <div className={`p-3 rounded-lg ${notification.type === 'order' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                        {notification.type === 'order' ? <Package className="w-5 h-5" /> : <Info className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <h3 className={`font-semibold mb-1 ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
+                          {notification.title}
+                        </h3>
+                        <p className="text-gray-600 mb-2">{notification.message}</p>
+                        <span className="text-xs text-gray-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {notification.created_at?.toDate
+                            ? notification.created_at.toDate().toLocaleString()
+                            : new Date().toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                    {!notification.read && (
+                      <button
+                        onClick={() => handleMarkNotificationRead(notification.id)}
+                        className="text-sm text-green-600 hover:text-green-700 font-semibold flex items-center gap-1 bg-white px-3 py-1.5 rounded-lg border border-green-100 shadow-sm"
+                      >
+                        <Check className="w-4 h-4" />
+                        Mark as read
+                      </button>
+                    )}
+                  </motion.div>
+                ))
+              )}
             </div>
           </motion.div>
         )}
@@ -908,49 +993,6 @@ export default function AdminDashboard() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                   />
                 </div>
-                {/* Notifications Tab */}
-                {activeTab === "notifications" && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Notifications</h2>
-                    <div className="space-y-4">
-                      {adminNotifications.length === 0 ? (
-                        <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
-                          No notifications
-                        </div>
-                      ) : (
-                        adminNotifications.map((notification) => (
-                          <div
-                            key={notification.id}
-                            className={`bg-white rounded-xl shadow-md p-6 flex items-start justify-between ${!notification.read ? "border-l-4 border-green-500" : "opacity-75"
-                              }`}
-                          >
-                            <div>
-                              <h3 className="font-semibold text-gray-900 mb-1">
-                                {notification.title}
-                              </h3>
-                              <p className="text-gray-600 mb-2">{notification.message}</p>
-                              <span className="text-sm text-gray-400">
-                                {notification.created_at?.toDate ? notification.created_at.toDate().toLocaleString() : new Date().toLocaleString()}
-                              </span>
-                            </div>
-                            {!notification.read && (
-                              <button
-                                onClick={() => handleMarkNotificationRead(notification.id)}
-                                className="text-sm text-green-600 hover:text-green-700 font-semibold"
-                              >
-                                Mark as read
-                              </button>
-                            )}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </motion.div>
-                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

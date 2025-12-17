@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "@/react-app/context/AuthContext";
 import Navbar from "@/react-app/components/Navbar";
-import { MapPin, CreditCard, CheckCircle } from "lucide-react";
+import { MapPin, CreditCard, CheckCircle, X, Smartphone, Banknote, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import type { CartItem } from "@/react-app/lib/firestore";
 import { getCart, createOrder, clearCart } from "@/react-app/lib/firestore";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Checkout() {
   const { user } = useAuth();
@@ -13,6 +14,9 @@ export default function Checkout() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
+
   const [formData, setFormData] = useState({
     address: "",
     city: "",
@@ -21,6 +25,15 @@ export default function Checkout() {
     phone: "",
     paymentMethod: "card",
   });
+
+  const [cardDetails, setCardDetails] = useState({
+    number: "",
+    expiry: "",
+    cvv: "",
+    name: ""
+  });
+
+  const [upiId, setUpiId] = useState("");
 
   useEffect(() => {
     if (!user) {
@@ -55,8 +68,7 @@ export default function Checkout() {
   const tax = subtotal * 0.085;
   const total = subtotal + deliveryFee + tax;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePlaceOrder = async () => {
     if (!user) return;
     setSubmitting(true);
 
@@ -67,7 +79,8 @@ export default function Checkout() {
         delivery_address: deliveryAddress,
         delivery_slot: "Tomorrow, 10:00 AM - 12:00 PM",
         payment_method: formData.paymentMethod,
-        total: total
+        total: total,
+        payment_status: formData.paymentMethod === 'cod' ? 'pending' : 'paid'
       };
 
       const orderId = await createOrder(user.uid, orderData, cartItems);
@@ -79,6 +92,27 @@ export default function Checkout() {
       toast.error("Failed to place order");
     } finally {
       setSubmitting(false);
+      setProcessingPayment(false);
+      setShowPaymentModal(false);
+    }
+  };
+
+  const handlePaymentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProcessingPayment(true);
+
+    // Simulate payment processing
+    setTimeout(() => {
+      handlePlaceOrder();
+    }, 2000);
+  };
+
+  const initiateCheckout = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData.paymentMethod === 'cod') {
+      handlePlaceOrder();
+    } else {
+      setShowPaymentModal(true);
     }
   };
 
@@ -124,7 +158,7 @@ export default function Checkout() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={initiateCheckout}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
               {/* Delivery Address */}
@@ -229,7 +263,7 @@ export default function Checkout() {
                 </div>
 
                 <div className="space-y-3">
-                  <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-green-500 transition-colors">
+                  <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'card' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-200'}`}>
                     <input
                       type="radio"
                       name="payment"
@@ -240,6 +274,7 @@ export default function Checkout() {
                       }
                       className="mr-3"
                     />
+                    <CreditCard className="w-5 h-5 mr-3 text-gray-600" />
                     <div className="flex-1">
                       <div className="font-semibold text-gray-900">
                         Credit/Debit Card
@@ -250,7 +285,7 @@ export default function Checkout() {
                     </div>
                   </label>
 
-                  <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-green-500 transition-colors">
+                  <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'upi' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-200'}`}>
                     <input
                       type="radio"
                       name="payment"
@@ -261,6 +296,7 @@ export default function Checkout() {
                       }
                       className="mr-3"
                     />
+                    <Smartphone className="w-5 h-5 mr-3 text-gray-600" />
                     <div className="flex-1">
                       <div className="font-semibold text-gray-900">UPI Payment</div>
                       <div className="text-sm text-gray-600">
@@ -269,7 +305,7 @@ export default function Checkout() {
                     </div>
                   </label>
 
-                  <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-green-500 transition-colors">
+                  <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'cod' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-200'}`}>
                     <input
                       type="radio"
                       name="payment"
@@ -280,6 +316,7 @@ export default function Checkout() {
                       }
                       className="mr-3"
                     />
+                    <Banknote className="w-5 h-5 mr-3 text-gray-600" />
                     <div className="flex-1">
                       <div className="font-semibold text-gray-900">
                         Cash on Delivery
@@ -377,6 +414,129 @@ export default function Checkout() {
             </div>
           </div>
         </form>
+
+        {/* Payment Modal */}
+        <AnimatePresence>
+          {showPaymentModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-white rounded-2xl max-w-md w-full p-6 relative overflow-hidden"
+              >
+                <button
+                  onClick={() => setShowPaymentModal(false)}
+                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-6 h-6 text-gray-500" />
+                </button>
+
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  {formData.paymentMethod === 'card' ? 'Enter Card Details' : 'UPI Payment'}
+                </h2>
+
+                <form onSubmit={handlePaymentSubmit} className="space-y-4">
+                  {formData.paymentMethod === 'card' ? (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
+                        <input
+                          type="text"
+                          required
+                          maxLength={19}
+                          placeholder="0000 0000 0000 0000"
+                          value={cardDetails.number}
+                          onChange={e => setCardDetails({ ...cardDetails, number: e.target.value })}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Expiry</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="MM/YY"
+                            maxLength={5}
+                            value={cardDetails.expiry}
+                            onChange={e => setCardDetails({ ...cardDetails, expiry: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">CVV</label>
+                          <input
+                            type="password"
+                            required
+                            maxLength={3}
+                            placeholder="123"
+                            value={cardDetails.cvv}
+                            onChange={e => setCardDetails({ ...cardDetails, cvv: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Cardholder Name</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="John Doe"
+                          value={cardDetails.name}
+                          onChange={e => setCardDetails({ ...cardDetails, name: e.target.value })}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-center mb-6">
+                        <div className="w-48 h-48 bg-gray-100 mx-auto rounded-lg flex items-center justify-center mb-4">
+                          <span className="text-gray-400">QR Code</span>
+                        </div>
+                        <p className="text-sm text-gray-500">Scan QR code to pay</p>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                          <span className="px-2 bg-white text-gray-500">Or enter UPI ID</span>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">UPI ID</label>
+                        <input
+                          type="text"
+                          placeholder="username@upi"
+                          value={upiId}
+                          onChange={e => setUpiId(e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={processingPayment}
+                    className="w-full py-4 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 mt-6"
+                  >
+                    {processingPayment ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Processing Payment...
+                      </>
+                    ) : (
+                      `Pay ₹${total.toFixed(2)}`
+                    )}
+                  </button>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
