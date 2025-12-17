@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "@/react-app/context/AuthContext";
 import { getNotifications } from "@/react-app/lib/firestore";
-import { ShoppingCart, Heart, Bell, User, LogOut, Search } from "lucide-react";
+import { ShoppingCart, Heart, Bell, User, LogOut, Search, ShoppingBag, Leaf } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -54,13 +54,16 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-2 group">
-              <motion.div
-                whileHover={{ rotate: 10 }}
-                className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg"
-              >
-                <span className="text-white text-xl font-bold">G</span>
-              </motion.div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
+              <div className="relative w-10 h-10">
+                <div className="absolute inset-0 bg-green-100 rounded-xl rotate-6 group-hover:rotate-12 transition-transform"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:-translate-y-1 transition-transform">
+                  <ShoppingBag className="w-6 h-6 text-white" />
+                  <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-0.5 border-2 border-white">
+                    <Leaf className="w-3 h-3 text-green-700" />
+                  </div>
+                </div>
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent" style={{ fontFamily: "'Fredoka One', cursive" }}>
                 GroceryMart
               </span>
             </Link>
