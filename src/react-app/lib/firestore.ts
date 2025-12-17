@@ -177,10 +177,11 @@ export const createAdminNotification = async (title: string, message: string, ty
 };
 
 // Orders
-export const createOrder = async (userId: string, orderData: any, cartItems: any[]) => {
+export const createOrder = async (userId: string, userName: string, orderData: any, cartItems: any[]) => {
     const orderRef = await addDoc(collection(db, "orders"), {
         ...orderData,
         user_id: userId,
+        user_name: userName,
         created_at: serverTimestamp(),
         status: "confirmed",
         items: cartItems
@@ -191,7 +192,7 @@ export const createOrder = async (userId: string, orderData: any, cartItems: any
     // Notify Admin
     await createAdminNotification(
         "New Order Placed",
-        `Order #${orderData.order_number || orderRef.id.slice(0, 6)} has been placed by user ${userId}. Total: ₹${orderData.total}`,
+        `Order #${orderData.order_number || orderRef.id.slice(0, 6)} has been placed by user ${userName}. Total: ₹${orderData.total}`,
         "order"
     );
 

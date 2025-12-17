@@ -77,7 +77,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-xl md:text-1xl mb-8 text-green-50"
+              className="text-xl md:text-2xl mb-8 text-green-50"
             >
               Shop from 10,000+ products and get them delivered in 24 hours
             </motion.p>
@@ -92,13 +92,13 @@ export default function Home() {
                   const element = document.getElementById('categories-section');
                   element?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="bg-white text-green-600 px-8 py-4 rounded-lg font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all"
+                className="bg-white text-green-600 px-8 py-4 rounded-lg font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all w-full sm:w-auto"
               >
                 Start Shopping
               </button>
               <button
                 onClick={() => setSelectedCategory("organic")}
-                className="bg-green-600 border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-xl hover:bg-green-700 transition-all"
+                className="bg-green-600 border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-xl hover:bg-green-700 transition-all w-full sm:w-auto"
               >
                 Organic Collection
               </button>

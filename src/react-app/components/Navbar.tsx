@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "@/react-app/context/AuthContext";
 import { getNotifications } from "@/react-app/lib/firestore";
-import { ShoppingCart, Heart, Bell, User, LogOut, Search, ShoppingBag, Leaf } from "lucide-react";
+import { ShoppingCart, Heart, Bell, User, LogOut, Search, ShoppingBag, Leaf, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -11,6 +11,7 @@ export default function Navbar() {
   const [cartCount, setCartCount] = useState(0);
   const [notificationCount, setNotificationCount] = useState(0);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -45,6 +46,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     await logout();
     setShowUserMenu(false);
+    setIsMenuOpen(false);
     navigate("/");
   };
 
@@ -52,7 +54,15 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+
             <Link to="/" className="flex items-center gap-2 group">
               <div className="relative w-10 h-10">
                 <div className="absolute inset-0 bg-green-100 rounded-xl rotate-6 group-hover:rotate-12 transition-transform"></div>
@@ -63,12 +73,12 @@ export default function Navbar() {
                   </div>
                 </div>
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent" style={{ fontFamily: "'Fredoka One', cursive" }}>
+              <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent hidden sm:block" style={{ fontFamily: "'Fredoka One', cursive" }}>
                 GroceryMart
               </span>
             </Link>
 
-            <div className="hidden md:flex items-center gap-6">
+            <div className="hidden md:flex items-center gap-6 ml-4">
               <Link to="/" className="text-gray-700 hover:text-green-600 font-medium transition-colors relative group">
                 Home
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-600 transition-all group-hover:w-full"></span>
@@ -86,7 +96,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Search Bar */}
+          {/* Search Bar - Desktop */}
           <div className="flex-1 max-w-lg mx-8 hidden md:block">
             <div className="relative">
               <input
@@ -106,12 +116,20 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
+            {/* Search Icon - Mobile */}
+            <button
+              onClick={() => navigate('/search')}
+              className="md:hidden p-2 hover:bg-gray-100 rounded-lg text-gray-600"
+            >
+              <Search className="w-6 h-6" />
+            </button>
+
             {user ? (
               <>
                 <Link
                   to="/wishlist"
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="hidden md:block p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                     <Heart className="w-6 h-6 text-gray-700" />
@@ -146,7 +164,7 @@ export default function Navbar() {
                   </motion.div>
                 </Link>
 
-                <div className="relative">
+                <div className="relative hidden md:block">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -210,7 +228,7 @@ export default function Navbar() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate("/login")}
-                className="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg"
+                className="px-4 py-2 md:px-6 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg text-sm md:text-base"
               >
                 Sign In
               </motion.button>
@@ -218,6 +236,76 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-    </nav >
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="md:hidden bg-white border-t border-gray-100 overflow-hidden"
+          >
+            <div className="px-4 py-4 space-y-4">
+              <Link
+                to="/"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg font-medium"
+              >
+                Home
+              </Link>
+              <Link
+                to="/offers"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg font-medium"
+              >
+                Offers
+              </Link>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg font-medium"
+                >
+                  Admin
+                </Link>
+              )}
+              {user && (
+                <>
+                  <div className="border-t border-gray-100 my-2"></div>
+                  <div className="px-4 py-2">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {user.displayName || "User"}
+                    </p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
+                  </div>
+                  <Link
+                    to="/orders"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg font-medium"
+                  >
+                    My Orders
+                  </Link>
+                  <Link
+                    to="/wishlist"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-lg font-medium"
+                  >
+                    Wishlist
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
   );
 }

@@ -83,7 +83,7 @@ export default function Checkout() {
         payment_status: formData.paymentMethod === 'cod' ? 'pending' : 'paid'
       };
 
-      const orderId = await createOrder(user.uid, orderData, cartItems);
+      const orderId = await createOrder(user.uid, user.displayName || user.email || "Unknown User", orderData, cartItems);
       await clearCart(user.uid);
       toast.success("Order placed successfully!");
       navigate(`/orders/${orderId}`);
@@ -132,7 +132,7 @@ export default function Checkout() {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
 
         {/* Progress Steps */}
         <div className="mb-8 flex items-center justify-center gap-4">

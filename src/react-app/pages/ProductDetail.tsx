@@ -139,7 +139,7 @@ export default function ProductDetail() {
                   "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800"
                 }
                 alt={product.name}
-                className="w-full h-[500px] object-cover rounded-xl"
+                className="w-full h-[300px] md:h-[500px] object-cover rounded-xl"
               />
               {hasDiscount && (
                 <div className="absolute top-4 left-4 bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">
@@ -156,7 +156,7 @@ export default function ProductDetail() {
                 </div>
               )}
 
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
                 {product.name}
               </h1>
 
@@ -182,16 +182,16 @@ export default function ProductDetail() {
                 </div>
               )}
 
-              <div className="flex items-center gap-4 mb-6">
-                <span className="text-4xl font-bold text-green-600">
+              <div className="flex flex-wrap items-center gap-2 md:gap-4 mb-6">
+                <span className="text-3xl md:text-4xl font-bold text-green-600">
                   ₹{price.toFixed(2)}
                 </span>
                 {hasDiscount && (
                   <>
-                    <span className="text-2xl text-gray-500 line-through">
+                    <span className="text-xl md:text-2xl text-gray-500 line-through">
                       ₹{product.price.toFixed(2)}
                     </span>
-                    <span className="text-lg text-green-600 font-semibold">
+                    <span className="text-base md:text-lg text-green-600 font-semibold">
                       Save ₹{(product.price - price).toFixed(2)}
                     </span>
                   </>
@@ -248,16 +248,17 @@ export default function ProductDetail() {
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
                     <button
                       onClick={handleAddToCart}
                       className="flex-1 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                     >
                       <ShoppingCart className="w-5 h-5" />
-                      Add to Cart - ₹{(price * quantity).toFixed(2)}
+                      <span className="hidden sm:inline">Add to Cart - ₹{(price * quantity).toFixed(2)}</span>
+                      <span className="sm:hidden">Add - ₹{(price * quantity).toFixed(2)}</span>
                     </button>
-                    <button className="p-4 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
-                      <Heart className="w-6 h-6 text-gray-700" />
+                    <button className="p-4 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors sm:w-auto w-full">
+                      <Heart className="w-6 h-6 text-gray-700 mx-auto" />
                     </button>
                   </div>
                 </>
@@ -267,7 +268,7 @@ export default function ProductDetail() {
 
           {/* Tabs */}
           <div className="border-t border-gray-200">
-            <div className="flex gap-8 px-8 pt-6">
+            <div className="flex gap-4 md:gap-8 px-4 md:px-8 pt-6 overflow-x-auto">
               <button
                 onClick={() => setActiveTab("description")}
                 className={`pb-4 font-semibold transition-colors ${activeTab === "description"

@@ -106,7 +106,7 @@ export default function Cart() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
             Shopping Cart ({cartItems.length} items)
           </h1>
           {cartItems.length > 0 && (
@@ -146,7 +146,7 @@ export default function Cart() {
                 return (
                   <div
                     key={item.id}
-                    className="bg-white rounded-xl shadow-md p-6 flex gap-6 hover:shadow-lg transition-shadow"
+                    className="bg-white rounded-xl shadow-md p-4 md:p-6 flex flex-col sm:flex-row gap-4 md:gap-6 hover:shadow-lg transition-shadow"
                   >
                     <img
                       src={
@@ -154,7 +154,7 @@ export default function Cart() {
                         "https://images.unsplash.com/photo-1542838132-92c53300491e?w=200"
                       }
                       alt={item.name}
-                      className="w-24 h-24 object-cover rounded-lg"
+                      className="w-full sm:w-24 h-48 sm:h-24 object-cover rounded-lg"
                     />
 
                     <div className="flex-1">
