@@ -93,7 +93,7 @@ export default function Navbar() {
                 onChange={(e) => {
                   const query = e.target.value;
                   if (query) {
-                    navigate(`/?search=${encodeURIComponent(query)}`);
+                    navigate(`/search?search=${encodeURIComponent(query)}`);
                   } else {
                     navigate('/');
                   }

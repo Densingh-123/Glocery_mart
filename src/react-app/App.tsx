@@ -11,6 +11,7 @@ import WishlistPage from "@/react-app/pages/Wishlist";
 import OffersPage from "@/react-app/pages/Offers";
 import AdminDashboard from "@/react-app/pages/AdminDashboard";
 import NotificationsPage from "@/react-app/pages/Notifications";
+import SearchResultsPage from "@/react-app/pages/SearchResults";
 import LoginPage from "@/react-app/pages/Login";
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/offers" element={<OffersPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
         </Routes>
       </Router>

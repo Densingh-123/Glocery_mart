@@ -233,6 +233,43 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSeedProducts = async () => {
+    if (!confirm("This will add sample products to the database. Continue?")) return;
+
+    const sampleProducts = [
+      { name: "Organic Bananas", category: "fruits", price: 60, stock: 100, image_url: "https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=500", description: "Fresh organic bananas", is_organic: true },
+      { name: "Red Apples", category: "fruits", price: 120, sale_price: 100, stock: 50, image_url: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=500", description: "Crisp red apples", is_organic: false },
+      { name: "Whole Milk", category: "dairy", price: 50, stock: 200, image_url: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500", description: "Fresh whole milk", is_organic: false },
+      { name: "Brown Bread", category: "bakery", price: 40, stock: 30, image_url: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500", description: "Healthy brown bread", is_organic: true },
+      { name: "Chicken Breast", category: "meat", price: 250, sale_price: 220, stock: 20, image_url: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500", description: "Boneless chicken breast", is_organic: false },
+      { name: "Potato Chips", category: "snacks", price: 20, stock: 100, image_url: "https://images.unsplash.com/photo-1566478919030-41567d132720?w=500", description: "Classic salted chips", is_organic: false },
+      { name: "Orange Juice", category: "beverages", price: 100, stock: 40, image_url: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=500", description: "Freshly squeezed orange juice", is_organic: true },
+      { name: "Dish Soap", category: "household", price: 80, stock: 60, image_url: "https://images.unsplash.com/photo-1585837575652-2c90d59096e2?w=500", description: "Lemon scented dish soap", is_organic: false },
+      { name: "Shampoo", category: "personal_care", price: 150, stock: 50, image_url: "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=500", description: "Herbal shampoo", is_organic: true },
+      { name: "AA Batteries", category: "electronics", price: 40, stock: 200, image_url: "https://images.unsplash.com/photo-1619641472913-90b48df9926e?w=500", description: "Long lasting batteries", is_organic: false },
+      { name: "Spinach", category: "vegetables", price: 30, stock: 40, image_url: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=500", description: "Fresh green spinach", is_organic: true },
+      { name: "Tomatoes", category: "vegetables", price: 40, stock: 80, image_url: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500", description: "Ripe red tomatoes", is_organic: true },
+      { name: "Eggs", category: "dairy", price: 60, stock: 100, image_url: "https://images.unsplash.com/photo-1506976785307-8732e854ad03?w=500", description: "Farm fresh eggs", is_organic: false },
+      { name: "Chocolate Cake", category: "bakery", price: 300, stock: 10, image_url: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500", description: "Rich chocolate cake", is_organic: false },
+      { name: "Green Tea", category: "beverages", price: 120, stock: 50, image_url: "https://images.unsplash.com/photo-1627435601361-ec25f5b1d0e5?w=500", description: "Organic green tea", is_organic: true },
+    ];
+
+    try {
+      for (const product of sampleProducts) {
+        await addProduct({
+          ...product,
+          is_featured: Math.random() > 0.7,
+          is_bestseller: Math.random() > 0.8,
+        });
+      }
+      toast.success("Sample products added successfully!");
+      fetchData();
+    } catch (error) {
+      console.error("Error seeding products:", error);
+      toast.error("Failed to seed products");
+    }
+  };
+
   const editProduct = (product: Product) => {
     setEditingProduct(product);
     setProductForm({
