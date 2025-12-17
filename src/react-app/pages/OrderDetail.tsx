@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router";
-import { useAuth } from "@getmocha/users-service/react";
+import { useParams, Link, useNavigate } from "react-router";
+import { useAuth } from "@/react-app/context/AuthContext";
+import { getOrder } from "@/react-app/lib/firestore";
 import Navbar from "@/react-app/components/Navbar";
 import {
   CheckCircle,
@@ -12,22 +13,23 @@ import {
 
 export default function OrderDetail() {
   const { id } = useParams();
-  const { user, redirectToLogin } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
-      redirectToLogin();
+      navigate("/login");
       return;
     }
     fetchOrder();
   }, [id, user]);
 
   const fetchOrder = async () => {
+    if (!id) return;
     try {
-      const res = await fetch(`/api/orders/${id}`);
-      const data = await res.json();
+      const data = await getOrder(id);
       setOrder(data);
     } catch (error) {
       console.error("Error fetching order:", error);
@@ -109,11 +111,10 @@ export default function OrderDetail() {
                   <div key={step.name} className="flex gap-4 mb-8 last:mb-0">
                     <div className="flex flex-col items-center">
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          step.completed
-                            ? "bg-green-600 text-white"
-                            : "bg-gray-200 text-gray-400"
-                        }`}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center ${step.completed
+                          ? "bg-green-600 text-white"
+                          : "bg-gray-200 text-gray-400"
+                          }`}
                       >
                         {step.completed ? (
                           <CheckCircle className="w-6 h-6" />
@@ -123,9 +124,8 @@ export default function OrderDetail() {
                       </div>
                       {index < statusSteps.length - 1 && (
                         <div
-                          className={`w-0.5 h-16 ${
-                            step.completed ? "bg-green-600" : "bg-gray-200"
-                          }`}
+                          className={`w-0.5 h-16 ${step.completed ? "bg-green-600" : "bg-gray-200"
+                            }`}
                         ></div>
                       )}
                     </div>
@@ -204,7 +204,13 @@ export default function OrderDetail() {
                   <div className="text-sm text-gray-600 mb-1">Order Date</div>
                   <div className="font-semibold text-gray-900 flex items-center gap-2">
                     <Clock className="w-4 h-4" />
-                    {new Date(order.created_at).toLocaleDateString("en-IN", {
+                    {order.created_at?.toDate ? order.created_at.toDate().toLocaleDateString("en-IN", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }) : new Date(order.created_at).toLocaleDateString("en-IN", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -254,25 +260,25 @@ export default function OrderDetail() {
               <div className="space-y-2">
                 <div className="flex justify-between text-gray-700">
                   <span>Subtotal</span>
-                  <span>₹{order.subtotal.toFixed(2)}</span>
+                  <span>₹{(order.subtotal || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-700">
                   <span>Delivery Fee</span>
-                  <span>₹{order.delivery_fee.toFixed(2)}</span>
+                  <span>₹{(order.delivery_fee || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-700">
                   <span>Tax</span>
-                  <span>₹{order.tax.toFixed(2)}</span>
+                  <span>₹{(order.tax || 0).toFixed(2)}</span>
                 </div>
-                {order.discount > 0 && (
+                {(order.discount || 0) > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount</span>
-                    <span>-₹{order.discount.toFixed(2)}</span>
+                    <span>-₹{(order.discount || 0).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="border-t border-gray-200 pt-2 flex justify-between text-xl font-bold text-gray-900">
                   <span>Total</span>
-                  <span>₹{order.total.toFixed(2)}</span>
+                  <span>₹{(order.total || 0).toFixed(2)}</span>
                 </div>
               </div>
             </div>

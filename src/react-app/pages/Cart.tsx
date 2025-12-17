@@ -1,38 +1,29 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { useAuth } from "@getmocha/users-service/react";
+import { useAuth } from "@/react-app/context/AuthContext";
 import Navbar from "@/react-app/components/Navbar";
 import { Trash2, Plus, Minus, ArrowRight } from "lucide-react";
-
-interface CartItem {
-  id: number;
-  product_id: number;
-  quantity: number;
-  name: string;
-  price: number;
-  sale_price: number | null;
-  image_url: string | null;
-  stock: number;
-}
+import type { CartItem } from "@/react-app/lib/firestore";
+import { getCart, updateCartItem, removeFromCart, clearCart as clearCartFirestore } from "@/react-app/lib/firestore";
 
 export default function Cart() {
-  const { user, redirectToLogin } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
-      redirectToLogin();
+      navigate("/login");
       return;
     }
     fetchCart();
   }, [user]);
 
   const fetchCart = async () => {
+    if (!user) return;
     try {
-      const res = await fetch("/api/cart");
-      const data = await res.json();
+      const data = await getCart(user.uid);
       setCartItems(data);
     } catch (error) {
       console.error("Error fetching cart:", error);
@@ -41,24 +32,21 @@ export default function Cart() {
     }
   };
 
-  const updateQuantity = async (productId: number, quantity: number) => {
-    if (quantity < 1) return;
+  const updateQuantity = async (itemId: string, quantity: number) => {
+    if (quantity < 1 || !user) return;
 
     try {
-      await fetch(`/api/cart/${productId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quantity }),
-      });
+      await updateCartItem(user.uid, itemId, quantity);
       fetchCart();
     } catch (error) {
       console.error("Error updating quantity:", error);
     }
   };
 
-  const removeItem = async (productId: number) => {
+  const removeItem = async (itemId: string) => {
+    if (!user) return;
     try {
-      await fetch(`/api/cart/${productId}`, { method: "DELETE" });
+      await removeFromCart(user.uid, itemId);
       fetchCart();
     } catch (error) {
       console.error("Error removing item:", error);
@@ -66,10 +54,11 @@ export default function Cart() {
   };
 
   const clearCart = async () => {
+    if (!user) return;
     if (!confirm("Are you sure you want to clear your cart?")) return;
 
     try {
-      await fetch("/api/cart", { method: "DELETE" });
+      await clearCartFirestore(user.uid);
       fetchCart();
     } catch (error) {
       console.error("Error clearing cart:", error);
@@ -181,7 +170,7 @@ export default function Cart() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() =>
-                              updateQuantity(item.product_id, item.quantity - 1)
+                              updateQuantity(item.id, item.quantity - 1)
                             }
                             className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                           >
@@ -192,7 +181,7 @@ export default function Cart() {
                           </span>
                           <button
                             onClick={() =>
-                              updateQuantity(item.product_id, item.quantity + 1)
+                              updateQuantity(item.id, item.quantity + 1)
                             }
                             className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                           >
@@ -201,7 +190,7 @@ export default function Cart() {
                         </div>
 
                         <button
-                          onClick={() => removeItem(item.product_id)}
+                          onClick={() => removeItem(item.id)}
                           className="text-red-600 hover:text-red-700 p-2"
                         >
                           <Trash2 className="w-5 h-5" />

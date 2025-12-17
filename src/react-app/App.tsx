@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router";
-import { AuthProvider } from "@getmocha/users-service/react";
+import { AuthProvider } from "@/react-app/context/AuthContext";
 import HomePage from "@/react-app/pages/Home";
 import AuthCallbackPage from "@/react-app/pages/AuthCallback";
 import ProductDetailPage from "@/react-app/pages/ProductDetail";
@@ -11,6 +11,7 @@ import WishlistPage from "@/react-app/pages/Wishlist";
 import OffersPage from "@/react-app/pages/Offers";
 import AdminDashboard from "@/react-app/pages/AdminDashboard";
 import NotificationsPage from "@/react-app/pages/Notifications";
+import LoginPage from "@/react-app/pages/Login";
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/products/:id" element={<ProductDetailPage />} />
           <Route path="/cart" element={<CartPage />} />

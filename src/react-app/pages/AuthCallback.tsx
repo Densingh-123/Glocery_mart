@@ -1,25 +1,15 @@
 import { useEffect } from "react";
-import { useAuth } from "@getmocha/users-service/react";
 import { useNavigate } from "react-router";
 import { Loader2 } from "lucide-react";
 
 export default function AuthCallback() {
-  const { exchangeCodeForSessionToken } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleCallback = async () => {
-      try {
-        await exchangeCodeForSessionToken();
-        navigate("/");
-      } catch (error) {
-        console.error("Auth callback error:", error);
-        navigate("/");
-      }
-    };
-
-    handleCallback();
-  }, [exchangeCodeForSessionToken, navigate]);
+    // Since we use Firebase popup, we don't need a callback page.
+    // Just redirect to home.
+    navigate("/");
+  }, [navigate]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-green-50 to-blue-50">

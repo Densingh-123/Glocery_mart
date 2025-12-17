@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import { useAuth } from "@getmocha/users-service/react";
+import { useAuth } from "@/react-app/context/AuthContext";
 import Navbar from "@/react-app/components/Navbar";
 import ProductCard from "@/react-app/components/ProductCard";
 import {
@@ -13,12 +13,13 @@ import {
   Minus,
   Plus,
 } from "lucide-react";
-import type { Product, Review } from "@/shared/types";
+import type { Product, Review } from "@/react-app/lib/firestore";
+import { getProduct, getReviews, getProducts, addToCart, addReview } from "@/react-app/lib/firestore";
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, redirectToLogin } = useAuth();
+  const { user } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [recommendations, setRecommendations] = useState<Product[]>([]);
@@ -34,21 +35,21 @@ export default function ProductDetail() {
   }, [id]);
 
   const fetchProductDetails = async () => {
+    if (!id) return;
     setLoading(true);
     try {
-      const [productRes, reviewsRes, recsRes] = await Promise.all([
-        fetch(`/api/products/${id}`),
-        fetch(`/api/products/${id}/reviews`),
-        fetch(`/api/products/${id}/recommendations`),
-      ]);
+      const productData = await getProduct(id);
+      if (productData) {
+        setProduct(productData);
 
-      const productData = await productRes.json();
-      const reviewsData = await reviewsRes.json();
-      const recsData = await recsRes.json();
+        // Fetch reviews
+        const reviewsData = await getReviews(id);
+        setReviews(reviewsData);
 
-      setProduct(productData);
-      setReviews(reviewsData);
-      setRecommendations(recsData);
+        // Fetch recommendations (same category)
+        const recsData = await getProducts(productData.category, undefined, false);
+        setRecommendations(recsData.filter(p => p.id !== id).slice(0, 4));
+      }
     } catch (error) {
       console.error("Error fetching product details:", error);
     } finally {
@@ -58,16 +59,14 @@ export default function ProductDetail() {
 
   const handleAddToCart = async () => {
     if (!user) {
-      redirectToLogin();
+      navigate("/login");
       return;
     }
 
+    if (!product) return;
+
     try {
-      await fetch("/api/cart", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product_id: product!.id, quantity }),
-      });
+      await addToCart(user.uid, product, quantity);
       navigate("/cart");
     } catch (error) {
       console.error("Error adding to cart:", error);
@@ -77,19 +76,19 @@ export default function ProductDetail() {
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      redirectToLogin();
+      navigate("/login");
       return;
     }
 
+    if (!product) return;
+
     try {
-      await fetch("/api/reviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          product_id: product!.id,
-          rating: reviewForm.rating,
-          comment: reviewForm.comment,
-        }),
+      await addReview({
+        product_id: product.id,
+        user_id: user.uid,
+        user_name: user.displayName || "Anonymous",
+        rating: reviewForm.rating,
+        comment: reviewForm.comment,
       });
       setReviewForm({ rating: 5, comment: "" });
       fetchProductDetails();
@@ -151,7 +150,7 @@ export default function ProductDetail() {
 
             {/* Product Info */}
             <div>
-              {product.is_bestseller === 1 && (
+              {product.is_bestseller && (
                 <div className="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold mb-4">
                   🏆 Best Seller
                 </div>
@@ -161,22 +160,21 @@ export default function ProductDetail() {
                 {product.name}
               </h1>
 
-              {product.rating > 0 && (
+              {product.rating && product.rating > 0 && (
                 <div className="flex items-center gap-2 mb-4">
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-5 h-5 ${
-                          i < Math.floor(product.rating)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300"
-                        }`}
+                        className={`w-5 h-5 ${i < Math.floor(product.rating)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
+                          }`}
                       />
                     ))}
                   </div>
                   <span className="text-lg font-semibold text-gray-700">
-                    {product.rating.toFixed(1)}
+                    {product.rating?.toFixed(1)}
                   </span>
                   <span className="text-gray-500">
                     ({product.review_count} reviews)
@@ -272,21 +270,19 @@ export default function ProductDetail() {
             <div className="flex gap-8 px-8 pt-6">
               <button
                 onClick={() => setActiveTab("description")}
-                className={`pb-4 font-semibold transition-colors ${
-                  activeTab === "description"
-                    ? "text-green-600 border-b-2 border-green-600"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
+                className={`pb-4 font-semibold transition-colors ${activeTab === "description"
+                  ? "text-green-600 border-b-2 border-green-600"
+                  : "text-gray-600 hover:text-gray-900"
+                  }`}
               >
                 Description
               </button>
               <button
                 onClick={() => setActiveTab("reviews")}
-                className={`pb-4 font-semibold transition-colors ${
-                  activeTab === "reviews"
-                    ? "text-green-600 border-b-2 border-green-600"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
+                className={`pb-4 font-semibold transition-colors ${activeTab === "reviews"
+                  ? "text-green-600 border-b-2 border-green-600"
+                  : "text-gray-600 hover:text-gray-900"
+                  }`}
               >
                 Reviews ({product.review_count})
               </button>
@@ -299,7 +295,7 @@ export default function ProductDetail() {
                     {product.description ||
                       "Fresh, high-quality product sourced from trusted suppliers. Perfect for your daily needs."}
                   </p>
-                  {product.is_organic === 1 && (
+                  {product.is_organic && (
                     <div className="mt-4 p-4 bg-green-50 rounded-lg">
                       <h3 className="text-green-800 font-semibold mb-2">
                         🌿 100% Organic
@@ -336,11 +332,10 @@ export default function ProductDetail() {
                               className="p-2"
                             >
                               <Star
-                                className={`w-6 h-6 ${
-                                  rating <= reviewForm.rating
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-gray-300"
-                                }`}
+                                className={`w-6 h-6 ${rating <= reviewForm.rating
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                                  }`}
                               />
                             </button>
                           ))}
@@ -384,7 +379,7 @@ export default function ProductDetail() {
                               <span className="font-semibold text-gray-900">
                                 {review.user_name || "Anonymous"}
                               </span>
-                              {review.is_verified === 1 && (
+                              {review.is_verified && (
                                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
                                   Verified Purchase
                                 </span>
@@ -394,11 +389,10 @@ export default function ProductDetail() {
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
-                                  className={`w-4 h-4 ${
-                                    i < review.rating
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "text-gray-300"
-                                  }`}
+                                  className={`w-4 h-4 ${i < review.rating
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-300"
+                                    }`}
                                 />
                               ))}
                             </div>

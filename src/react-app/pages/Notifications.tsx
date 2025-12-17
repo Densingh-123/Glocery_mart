@@ -1,29 +1,30 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { useAuth } from "@getmocha/users-service/react";
+import { useAuth } from "@/react-app/context/AuthContext";
 import Navbar from "@/react-app/components/Navbar";
 import { Bell, Package, Gift, Check, Info } from "lucide-react";
+import { getNotifications, markNotificationAsRead } from "@/react-app/lib/firestore";
 import type { Notification } from "@/shared/types";
 
 export default function Notifications() {
-  const { user, redirectToLogin } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
-      redirectToLogin();
+      navigate("/login");
       return;
     }
     fetchNotifications();
   }, [user]);
 
   const fetchNotifications = async () => {
+    if (!user) return;
     try {
-      const res = await fetch("/api/notifications");
-      const data = await res.json();
-      setNotifications(data);
+      const data = await getNotifications(user.uid);
+      setNotifications(data as Notification[]);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     } finally {
@@ -31,9 +32,10 @@ export default function Notifications() {
     }
   };
 
-  const markAsRead = async (id: number) => {
+  const markAsRead = async (id: string) => {
+    if (!user) return;
     try {
-      await fetch(`/api/notifications/${id}/read`, { method: "PUT" });
+      await markNotificationAsRead(user.uid, id);
       fetchNotifications();
     } catch (error) {
       console.error("Error marking notification as read:", error);
@@ -111,11 +113,10 @@ export default function Notifications() {
               <div
                 key={notification.id}
                 onClick={() => handleNotificationClick(notification)}
-                className={`bg-white rounded-xl shadow-md p-6 cursor-pointer hover:shadow-lg transition-all ${
-                  notification.is_read === 0
-                    ? "border-l-4 border-green-500"
-                    : "opacity-75"
-                }`}
+                className={`bg-white rounded-xl shadow-md p-6 cursor-pointer hover:shadow-lg transition-all ${notification.is_read === 0
+                  ? "border-l-4 border-green-500"
+                  : "opacity-75"
+                  }`}
               >
                 <div className="flex gap-4">
                   <div

@@ -1,33 +1,37 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router";
-import { useAuth } from "@getmocha/users-service/react";
+import { Link, useNavigate } from "react-router";
+import { useAuth } from "@/react-app/context/AuthContext";
 import Navbar from "@/react-app/components/Navbar";
 import { Package, ChevronRight, MapPin, Clock } from "lucide-react";
-import type { Order } from "@/shared/types";
+import type { Order } from "@/react-app/lib/firestore";
+import { getOrders } from "@/react-app/lib/firestore";
 
 export default function Orders() {
-  const { user, redirectToLogin } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     if (!user) {
-      redirectToLogin();
-      return;
+      if (!user) {
+        navigate("/login");
+        return;
+      }
     }
     fetchOrders();
   }, [user, filter]);
 
   const fetchOrders = async () => {
+    if (!user) return;
     try {
-      let url = "/api/orders";
+      const data = await getOrders(user.uid);
       if (filter !== "all") {
-        url += `?status=${filter}`;
+        setOrders(data.filter(order => order.status === filter));
+      } else {
+        setOrders(data);
       }
-      const res = await fetch(url);
-      const data = await res.json();
-      setOrders(data);
     } catch (error) {
       console.error("Error fetching orders:", error);
     } finally {
@@ -83,11 +87,10 @@ export default function Orders() {
             <button
               key={tab.value}
               onClick={() => setFilter(tab.value)}
-              className={`px-6 py-2 rounded-lg font-semibold whitespace-nowrap transition-all ${
-                filter === tab.value
-                  ? "bg-green-600 text-white shadow-lg"
-                  : "bg-white text-gray-700 hover:bg-gray-50 shadow-sm"
-              }`}
+              className={`px-6 py-2 rounded-lg font-semibold whitespace-nowrap transition-all ${filter === tab.value
+                ? "bg-green-600 text-white shadow-lg"
+                : "bg-white text-gray-700 hover:bg-gray-50 shadow-sm"
+                }`}
             >
               {tab.label}
             </button>
@@ -129,7 +132,13 @@ export default function Orders() {
                       </div>
                       <div className="text-sm text-gray-600 flex items-center gap-2">
                         <Clock className="w-4 h-4" />
-                        {new Date(order.created_at).toLocaleDateString("en-IN", {
+                        {order.created_at?.toDate ? order.created_at.toDate().toLocaleDateString("en-IN", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }) : new Date(order.created_at).toLocaleDateString("en-IN", {
                           year: "numeric",
                           month: "short",
                           day: "numeric",
@@ -140,7 +149,19 @@ export default function Orders() {
                     </div>
                   </div>
 
-                  <ChevronRight className="w-6 h-6 text-gray-400" />
+                  <div className="flex items-center gap-4">
+                    <ChevronRight className="w-6 h-6 text-gray-400" />
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <Link
+                    to={`/orders/${order.id}`}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg font-semibold hover:bg-green-100 transition-colors"
+                  >
+                    <Package className="w-4 h-4" />
+                    Track Order
+                  </Link>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -166,7 +187,7 @@ export default function Orders() {
                   <div>
                     <div className="text-sm text-gray-600 mb-1">Payment</div>
                     <div className="text-sm font-semibold text-green-600">
-                      {order.payment_status === "paid" ? "✓ Paid" : "Pending"}
+                      {order.status !== "cancelled" ? "✓ Paid" : "Cancelled"}
                     </div>
                   </div>
                 </div>

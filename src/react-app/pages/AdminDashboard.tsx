@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@getmocha/users-service/react";
 import Navbar from "@/react-app/components/Navbar";
 import {
   Package,
@@ -11,19 +10,29 @@ import {
   X,
   Gift,
 } from "lucide-react";
-import type { Product, Order, Offer } from "@/shared/types";
+import {
+  getProducts,
+  getAllOrders,
+  getOffers,
+  addProduct,
+  updateProduct,
+  deleteProduct,
+  updateOrderStatus,
+  createOffer,
+  deleteOffer,
+  getAdminNotifications,
+  markAdminNotificationAsRead,
+  type Product,
+  type Order,
+  type Offer,
+} from "@/react-app/lib/firestore";
+import { useAuth } from "@/react-app/context/AuthContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function AdminDashboard() {
-  const { user, redirectToLogin } = useAuth();
-  const [activeTab, setActiveTab] = useState<"products" | "orders" | "offers">(
-    "products"
-  );
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [offers, setOffers] = useState<Offer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showProductModal, setShowProductModal] = useState(false);
-  const [showOfferModal, setShowOfferModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -47,48 +56,44 @@ export default function AdminDashboard() {
     valid_until: "",
   });
 
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [adminNotifications, setAdminNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"products" | "orders" | "offers" | "notifications">("products");
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [showOfferModal, setShowOfferModal] = useState(false);
+
   useEffect(() => {
     if (!user) {
-      redirectToLogin();
+      window.location.href = "/login";
       return;
     }
     checkAdmin();
   }, [user]);
 
   const checkAdmin = async () => {
-    try {
-      const res = await fetch("/api/users/me");
-      const data = await res.json();
-      if (!data.isAdmin) {
-        window.location.href = "/";
-        return;
-      }
+    if (user?.email && (user.email.toLowerCase().includes("densingh") || user.email.toLowerCase().includes("admin"))) {
       setIsAdmin(true);
       fetchData();
-    } catch (error) {
-      console.error("Error checking admin:", error);
-      window.location.href = "/";
+    } else {
+      setIsAdmin(false);
     }
   };
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [productsRes, ordersRes, offersRes] = await Promise.all([
-        fetch("/api/products"),
-        fetch("/api/admin/orders"),
-        fetch("/api/offers"),
-      ]);
-
-      const [productsData, ordersData, offersData] = await Promise.all([
-        productsRes.json(),
-        ordersRes.json(),
-        offersRes.json(),
+      const [productsData, ordersData, offersData, notificationsData] = await Promise.all([
+        getProducts(),
+        getAllOrders(),
+        getOffers(),
+        getAdminNotifications(),
       ]);
 
       setProducts(productsData);
       setOrders(ordersData);
       setOffers(offersData);
+      setAdminNotifications(notificationsData);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -96,38 +101,43 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleMarkNotificationRead = async (id: string) => {
+    try {
+      await markAdminNotificationAsRead(id);
+      const updatedNotifications = await getAdminNotifications();
+      setAdminNotifications(updatedNotifications);
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const res = await fetch("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...productForm,
-          price: parseFloat(productForm.price),
-          sale_price: productForm.sale_price
-            ? parseFloat(productForm.sale_price)
-            : undefined,
-          stock: parseInt(productForm.stock),
-        }),
+      await addProduct({
+        ...productForm,
+        price: parseFloat(productForm.price),
+        sale_price: productForm.sale_price
+          ? parseFloat(productForm.sale_price)
+          : undefined,
+        stock: parseInt(productForm.stock),
+        is_bestseller: false,
       });
 
-      if (res.ok) {
-        setShowProductModal(false);
-        setProductForm({
-          name: "",
-          description: "",
-          category: "vegetables",
-          price: "",
-          sale_price: "",
-          stock: "",
-          image_url: "",
-          is_featured: false,
-          is_organic: false,
-        });
-        fetchData();
-      }
+      setShowProductModal(false);
+      setProductForm({
+        name: "",
+        description: "",
+        category: "vegetables",
+        price: "",
+        sale_price: "",
+        stock: "",
+        image_url: "",
+        is_featured: false,
+        is_organic: false,
+      });
+      fetchData();
     } catch (error) {
       console.error("Error creating product:", error);
     }
@@ -138,47 +148,37 @@ export default function AdminDashboard() {
     if (!editingProduct) return;
 
     try {
-      const res = await fetch(`/api/products/${editingProduct.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...productForm,
-          price: parseFloat(productForm.price),
-          sale_price: productForm.sale_price
-            ? parseFloat(productForm.sale_price)
-            : undefined,
-          stock: parseInt(productForm.stock),
-        }),
+      await updateProduct(editingProduct.id, {
+        ...productForm,
+        price: parseFloat(productForm.price),
+        sale_price: productForm.sale_price
+          ? parseFloat(productForm.sale_price)
+          : undefined,
+        stock: parseInt(productForm.stock),
       });
 
-      if (res.ok) {
-        setShowProductModal(false);
-        setEditingProduct(null);
-        fetchData();
-      }
+      setShowProductModal(false);
+      setEditingProduct(null);
+      fetchData();
     } catch (error) {
       console.error("Error updating product:", error);
     }
   };
 
-  const handleDeleteProduct = async (id: number) => {
+  const handleDeleteProduct = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
 
     try {
-      await fetch(`/api/products/${id}`, { method: "DELETE" });
+      await deleteProduct(id);
       fetchData();
     } catch (error) {
       console.error("Error deleting product:", error);
     }
   };
 
-  const handleUpdateOrderStatus = async (orderId: number, status: string) => {
+  const handleUpdateOrderStatus = async (orderId: string, status: string) => {
     try {
-      await fetch(`/api/admin/orders/${orderId}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
+      await updateOrderStatus(orderId, status);
       fetchData();
     } catch (error) {
       console.error("Error updating order status:", error);
@@ -189,30 +189,34 @@ export default function AdminDashboard() {
     e.preventDefault();
 
     try {
-      const res = await fetch("/api/offers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...offerForm,
-          discount_percentage: offerForm.discount_percentage
-            ? parseInt(offerForm.discount_percentage)
-            : undefined,
-        }),
+      await createOffer({
+        ...offerForm,
+        discount_percentage: offerForm.discount_percentage
+          ? parseInt(offerForm.discount_percentage)
+          : undefined,
       });
 
-      if (res.ok) {
-        setShowOfferModal(false);
-        setOfferForm({
-          title: "",
-          description: "",
-          discount_percentage: "",
-          coupon_code: "",
-          valid_until: "",
-        });
-        fetchData();
-      }
+      setShowOfferModal(false);
+      setOfferForm({
+        title: "",
+        description: "",
+        discount_percentage: "",
+        coupon_code: "",
+        valid_until: "",
+      });
+      fetchData();
     } catch (error) {
       console.error("Error creating offer:", error);
+    }
+  };
+
+  const handleDeleteOffer = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this offer?")) return;
+    try {
+      await deleteOffer(id);
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting offer:", error);
     }
   };
 
@@ -226,8 +230,8 @@ export default function AdminDashboard() {
       sale_price: product.sale_price?.toString() || "",
       stock: product.stock.toString(),
       image_url: product.image_url || "",
-      is_featured: product.is_featured === 1,
-      is_organic: product.is_organic === 1,
+      is_featured: product.is_featured,
+      is_organic: product.is_organic,
     });
     setShowProductModal(true);
   };
@@ -275,18 +279,25 @@ export default function AdminDashboard() {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Admin Dashboard
           </h1>
           <p className="text-gray-600">Manage products, orders, and offers</p>
-        </div>
+        </motion.div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <div
+            <motion.div
               key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
               className="bg-white rounded-xl shadow-lg p-6 flex items-center gap-4"
             >
               <div className={`${stat.color} p-4 rounded-lg`}>
@@ -298,25 +309,25 @@ export default function AdminDashboard() {
                   {stat.value}
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-6 border-b border-gray-200">
+        <div className="flex gap-4 mb-6 border-b border-gray-200 overflow-x-auto">
           {[
             { value: "products", label: "Products" },
             { value: "orders", label: "Orders" },
             { value: "offers", label: "Offers" },
+            { value: "notifications", label: "Notifications" },
           ].map((tab) => (
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value as any)}
-              className={`px-6 py-3 font-semibold transition-colors ${
-                activeTab === tab.value
-                  ? "text-green-600 border-b-2 border-green-600"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
+              className={`px-6 py-3 font-semibold transition-colors whitespace-nowrap ${activeTab === tab.value
+                ? "text-green-600 border-b-2 border-green-600"
+                : "text-gray-600 hover:text-gray-900"
+                }`}
             >
               {tab.label}
             </button>
@@ -325,10 +336,16 @@ export default function AdminDashboard() {
 
         {/* Products Tab */}
         {activeTab === "products" && (
-          <div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Products</h2>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   setEditingProduct(null);
                   setProductForm({
@@ -348,10 +365,10 @@ export default function AdminDashboard() {
               >
                 <Plus className="w-5 h-5" />
                 Add Product
-              </button>
+              </motion.button>
             </div>
 
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
@@ -398,13 +415,12 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`px-2 py-1 rounded text-sm font-semibold ${
-                            product.stock > 10
-                              ? "bg-green-100 text-green-800"
-                              : product.stock > 0
+                          className={`px-2 py-1 rounded text-sm font-semibold ${product.stock > 10
+                            ? "bg-green-100 text-green-800"
+                            : product.stock > 0
                               ? "bg-yellow-100 text-yellow-800"
                               : "bg-red-100 text-red-800"
-                          }`}
+                            }`}
                         >
                           {product.stock}
                         </span>
@@ -430,14 +446,18 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Orders Tab */}
         {activeTab === "orders" && (
-          <div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Orders</h2>
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
@@ -465,7 +485,7 @@ export default function AdminDashboard() {
                         #{order.order_number}
                       </td>
                       <td className="px-6 py-4 text-gray-700">
-                        {order.user_name || order.user_email}
+                        {order.user_id}
                       </td>
                       <td className="px-6 py-4 font-semibold text-gray-900">
                         ₹{order.total.toFixed(2)}
@@ -486,61 +506,79 @@ export default function AdminDashboard() {
                         </select>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(order.created_at).toLocaleDateString()}
+                        {order.created_at?.toDate ? order.created_at.toDate().toLocaleDateString() : new Date(order.created_at).toLocaleDateString()}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Offers Tab */}
         {activeTab === "offers" && (
-          <div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Offers</h2>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setShowOfferModal(true)}
                 className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
               >
                 <Plus className="w-5 h-5" />
                 Add Offer
-              </button>
+              </motion.button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {offers.map((offer) => (
-                <div
+                <motion.div
                   key={offer.id}
-                  className="bg-white rounded-xl shadow-lg p-6"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white rounded-xl shadow-lg p-6 relative group"
                 >
+                  <button
+                    onClick={() => handleDeleteOffer(offer.id)}
+                    className="absolute top-4 right-4 p-2 text-red-500 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
                   <h3 className="font-bold text-gray-900 mb-2">{offer.title}</h3>
                   <p className="text-gray-600 text-sm mb-4">
                     {offer.description}
                   </p>
                   {offer.coupon_code && (
-                    <div className="bg-green-100 text-green-800 px-3 py-2 rounded-lg font-mono text-sm mb-2">
+                    <div className="bg-green-100 text-green-800 px-3 py-2 rounded-lg font-mono text-sm mb-2 inline-block">
                       {offer.coupon_code}
                     </div>
                   )}
                   {offer.discount_percentage && (
-                    <div className="text-lg font-bold text-green-600">
+                    <div className="text-lg font-bold text-green-600 mt-2">
                       {offer.discount_percentage}% OFF
                     </div>
                   )}
-                </div>
+                </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
 
       {/* Product Modal */}
       {showProductModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8"
+          >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">
                 {editingProduct ? "Edit Product" : "Add New Product"}
@@ -606,6 +644,12 @@ export default function AdminDashboard() {
                     <option value="meat">Meat</option>
                     <option value="snacks">Snacks</option>
                     <option value="beverages">Beverages</option>
+                    <option value="household">Household</option>
+                    <option value="personal_care">Personal Care</option>
+                    <option value="electronics">Electronics</option>
+                    <option value="electrical">Electrical</option>
+                    <option value="home_kitchen">Home & Kitchen</option>
+                    <option value="fashion">Fashion</option>
                     <option value="organic">Organic</option>
                   </select>
                 </div>
@@ -732,14 +776,18 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
-          </div>
+          </motion.div>
         </div>
       )}
 
       {/* Offer Modal */}
       {showOfferModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl max-w-2xl w-full p-8"
+          >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Add New Offer</h2>
               <button
@@ -799,6 +847,49 @@ export default function AdminDashboard() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                   />
                 </div>
+                {/* Notifications Tab */}
+                {activeTab === "notifications" && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Notifications</h2>
+                    <div className="space-y-4">
+                      {adminNotifications.length === 0 ? (
+                        <div className="bg-white rounded-xl shadow-lg p-8 text-center text-gray-500">
+                          No notifications
+                        </div>
+                      ) : (
+                        adminNotifications.map((notification) => (
+                          <div
+                            key={notification.id}
+                            className={`bg-white rounded-xl shadow-md p-6 flex items-start justify-between ${!notification.read ? "border-l-4 border-green-500" : "opacity-75"
+                              }`}
+                          >
+                            <div>
+                              <h3 className="font-semibold text-gray-900 mb-1">
+                                {notification.title}
+                              </h3>
+                              <p className="text-gray-600 mb-2">{notification.message}</p>
+                              <span className="text-sm text-gray-400">
+                                {notification.created_at?.toDate ? notification.created_at.toDate().toLocaleString() : new Date().toLocaleString()}
+                              </span>
+                            </div>
+                            {!notification.read && (
+                              <button
+                                onClick={() => handleMarkNotificationRead(notification.id)}
+                                className="text-sm text-green-600 hover:text-green-700 font-semibold"
+                              >
+                                Mark as read
+                              </button>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -830,23 +921,16 @@ export default function AdminDashboard() {
                 />
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="pt-4">
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                  className="w-full py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
                 >
                   Create Offer
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowOfferModal(false)}
-                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
-                >
-                  Cancel
-                </button>
               </div>
             </form>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

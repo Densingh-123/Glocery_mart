@@ -110,14 +110,15 @@ export const CreateReviewSchema = z.object({
 
 // Notification schemas
 export const NotificationSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   user_id: z.string(),
   title: z.string(),
   message: z.string(),
   type: z.string(),
-  is_read: z.number(),
-  order_id: z.number().nullable(),
-  created_at: z.string(),
+  is_read: z.boolean().or(z.number()), // Allow both for compatibility
+  read: z.boolean().optional(), // Add read property
+  order_id: z.string().optional().nullable(), // Order ID can be string in Firestore
+  created_at: z.any(), // Firestore timestamp
 });
 
 export type Notification = z.infer<typeof NotificationSchema>;

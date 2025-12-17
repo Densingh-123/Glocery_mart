@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { useAuth } from "@getmocha/users-service/react";
+import { useAuth } from "@/react-app/context/AuthContext";
 import Navbar from "@/react-app/components/Navbar";
 import { MapPin, CreditCard, CheckCircle } from "lucide-react";
+import type { CartItem } from "@/react-app/lib/firestore";
+import { getCart, createOrder, clearCart } from "@/react-app/lib/firestore";
 
 export default function Checkout() {
-  const { user, redirectToLogin } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -21,16 +23,16 @@ export default function Checkout() {
 
   useEffect(() => {
     if (!user) {
-      redirectToLogin();
+      navigate("/login");
       return;
     }
     fetchCart();
   }, [user]);
 
   const fetchCart = async () => {
+    if (!user) return;
     try {
-      const res = await fetch("/api/cart");
-      const data = await res.json();
+      const data = await getCart(user.uid);
       if (data.length === 0) {
         navigate("/cart");
         return;
@@ -54,25 +56,22 @@ export default function Checkout() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     setSubmitting(true);
 
     try {
       const deliveryAddress = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`;
 
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          delivery_address: deliveryAddress,
-          delivery_slot: "Tomorrow, 10:00 AM - 12:00 PM",
-          payment_method: formData.paymentMethod,
-        }),
-      });
+      const orderData = {
+        delivery_address: deliveryAddress,
+        delivery_slot: "Tomorrow, 10:00 AM - 12:00 PM",
+        payment_method: formData.paymentMethod,
+        total: total
+      };
 
-      if (res.ok) {
-        const data = await res.json();
-        navigate(`/orders/${data.orderId}`);
-      }
+      const orderId = await createOrder(user.uid, orderData, cartItems);
+      await clearCart(user.uid);
+      navigate(`/orders/${orderId}`);
     } catch (error) {
       console.error("Error placing order:", error);
     } finally {

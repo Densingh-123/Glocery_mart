@@ -1,27 +1,30 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@getmocha/users-service/react";
+import { useNavigate } from "react-router";
+import { useAuth } from "@/react-app/context/AuthContext";
 import Navbar from "@/react-app/components/Navbar";
 import ProductCard from "@/react-app/components/ProductCard";
 import { Heart } from "lucide-react";
-import type { Product } from "@/shared/types";
+import type { Product } from "@/react-app/lib/firestore";
+import { getWishlist } from "@/react-app/lib/firestore";
 
 export default function Wishlist() {
-  const { user, redirectToLogin } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
-      redirectToLogin();
+      navigate("/login");
       return;
     }
     fetchWishlist();
   }, [user]);
 
   const fetchWishlist = async () => {
+    if (!user) return;
     try {
-      const res = await fetch("/api/wishlist");
-      const data = await res.json();
+      const data = await getWishlist(user.uid);
       setProducts(data);
     } catch (error) {
       console.error("Error fetching wishlist:", error);

@@ -3,7 +3,9 @@ import Navbar from "@/react-app/components/Navbar";
 import ProductCard from "@/react-app/components/ProductCard";
 import ChatBot from "@/react-app/components/ChatBot";
 import { Search, Sparkles, TrendingUp, Package } from "lucide-react";
-import type { Product } from "@/shared/types";
+import { getProducts } from "@/react-app/lib/firestore";
+import type { Product } from "@/react-app/lib/firestore";
+import { motion } from "framer-motion";
 
 const categories = [
   { name: "Vegetables", emoji: "🥗", value: "vegetables" },
@@ -13,6 +15,12 @@ const categories = [
   { name: "Meat", emoji: "🍖", value: "meat" },
   { name: "Snacks", emoji: "🍫", value: "snacks" },
   { name: "Beverages", emoji: "🧃", value: "beverages" },
+  { name: "Household", emoji: "🏠", value: "household" },
+  { name: "Personal Care", emoji: "🧴", value: "personal_care" },
+  { name: "Electronics", emoji: "📱", value: "electronics" },
+  { name: "Electrical", emoji: "🔌", value: "electrical" },
+  { name: "Home & Kitchen", emoji: "🍳", value: "home_kitchen" },
+  { name: "Fashion", emoji: "👕", value: "fashion" },
   { name: "Organic", emoji: "🌾", value: "organic" },
 ];
 
@@ -30,17 +38,18 @@ export default function Home() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      let url = "/api/products?";
-      if (selectedCategory) url += `category=${selectedCategory}&`;
-      if (searchQuery) url += `search=${searchQuery}&`;
-
-      const res = await fetch(url);
-      const data = await res.json();
+      const data = await getProducts(
+        selectedCategory === "" ? undefined : selectedCategory,
+        searchQuery,
+        false
+      );
       setProducts(data);
 
-      const featuredRes = await fetch("/api/products?featured=true");
-      const featuredData = await featuredRes.json();
-      setFeaturedProducts(featuredData.slice(0, 6));
+      // Featured products
+      if (!searchQuery && !selectedCategory) {
+        const featuredData = await getProducts(undefined, undefined, true);
+        setFeaturedProducts(featuredData.slice(0, 6));
+      }
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
@@ -79,7 +88,12 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search Bar */}
-        <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-8"
+        >
           <div className="relative max-w-2xl mx-auto">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -90,65 +104,59 @@ export default function Home() {
               className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none shadow-sm hover:shadow-md transition-all"
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* Categories */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <motion.h2
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2"
+          >
             <Package className="w-6 h-6 text-green-600" />
             Shop by Category
-          </h2>
+          </motion.h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-            {categories.map((category) => (
-              <button
+            {categories.map((category, index) => (
+              <motion.button
                 key={category.value}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 * index }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() =>
                   setSelectedCategory(
                     selectedCategory === category.value ? "" : category.value
                   )
                 }
-                className={`p-4 rounded-xl text-center transition-all ${
-                  selectedCategory === category.value
-                    ? "bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg scale-105"
-                    : "bg-white hover:bg-green-50 text-gray-700 shadow-sm hover:shadow-md"
-                }`}
+                className={`p-4 rounded-xl text-center transition-all ${selectedCategory === category.value
+                  ? "bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg"
+                  : "bg-white hover:bg-green-50 text-gray-700 shadow-sm hover:shadow-md"
+                  }`}
               >
                 <div className="text-4xl mb-2">{category.emoji}</div>
                 <div className="text-sm font-semibold">{category.name}</div>
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
 
-        {/* Featured Products */}
-        {!searchQuery && !selectedCategory && featuredProducts.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-yellow-500" />
-              Featured Products
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onAddToCart={fetchProducts}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* All Products */}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <motion.h2
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2"
+          >
             <TrendingUp className="w-6 h-6 text-green-600" />
             {searchQuery
               ? `Search Results for "${searchQuery}"`
               : selectedCategory
-              ? `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}`
-              : "All Products"}
-          </h2>
+                ? `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}`
+                : "All Products"}
+          </motion.h2>
 
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -167,7 +175,12 @@ export default function Home() {
               ))}
             </div>
           ) : products.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ staggerChildren: 0.1 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            >
               {products.map((product) => (
                 <ProductCard
                   key={product.id}
@@ -175,7 +188,7 @@ export default function Home() {
                   onAddToCart={fetchProducts}
                 />
               ))}
-            </div>
+            </motion.div>
           ) : (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🔍</div>
